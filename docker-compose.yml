@@ -1,0 +1,30 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: tweets-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: tweets
+      RABBITMQ_DEFAULT_PASS: tweets
+    ports:
+      - "5672:5672" # AMQP 0-9-1 (coletor, classificador, assinantes)
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  servico-mensagens:
+    build: ./message-service
+    container_name: tweets-servico-mensagens
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      AMQP_URL: amqp://tweets:tweets@rabbitmq:5672/
+
+volumes:
+  rabbitmq_data:
