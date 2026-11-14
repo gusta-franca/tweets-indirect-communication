@@ -9,7 +9,7 @@ Sistema publish/subscribe para distribuição de tweets por tópico, com comunic
 ## Arquitetura
 
 ```
-Coletor -> tweets.ingest -> tweets.raw -> 
+Coletor(es) -> tweets.ingest -> tweets.raw -> 
 Classificador(es) -> tweets.topics -> sub.<assinante> ->
 Assinante
 ```
@@ -25,7 +25,7 @@ Os módulos podem ser escritos em qualquer linguagem: todos falam apenas **AMQP 
 
 ## Como executar
 
-Na raiz do repositório:
+Na raiz do repositório, execute:
 
 ```bash
 make up
@@ -37,7 +37,7 @@ make up
 | `make down`          | Para os containers, mantendo os dados                            |
 | `make clean`         | Para os containers e remove o volume com os dados do broker      |
 | `make logs`          | Acompanha o log do serviço (`logs/message-service.log`)          |
-| `make run-mservice`  | Roda o serviço localmente, RabbitMQ fica no docker          |
+| `make run-mservice`  | Roda o serviço localmente, RabbitMQ fica no docker               |
 
 O RabbitMQ fica disponível em `amqp://tweets:tweets@localhost:5672/`.
 
@@ -96,4 +96,4 @@ O assinante publica em `tweets.control`:
 - O serviço cria a fila `sub.alice` (se não existir) e liga ou desliga cada tópico. Todos os tópicos assinados chegam na mesma fila, e o campo `topic` do tweet indica a origem.
 - Nomes de assinante e de tópico são normalizados (somente letras minúsuculas).
 - Se o pedido tiver `reply_to` (nome de uma fila), o serviço responde nela com `{"ok": true, "queue": "sub.alice", ...}` ou `{"ok": false, "error": "..."}`. O assinante só deve consumir `sub.<assinante>` depois dessa resposta.
-- Para receber a resposta, o assinante declara uma fila temporária (com nome gerado pelo broker) antes de publicar o pedido, informa o nome dela em `reply_to` e consome dela para ler a resposta.
+- Para receber a resposta, o assinante deve declarar uma fila temporária (com nome gerado pelo broker) antes de publicar o pedido, informa o nome dela em `reply_to` e consome dela para ler a resposta.
