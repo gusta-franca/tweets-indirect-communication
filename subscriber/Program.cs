@@ -132,9 +132,67 @@ try
         Log.Error("Resposta sem o nome da fila: {Reply}", replyJson);
         return 1;
     }
-    string subscriberQueue = reply.Queue; 
+    string subscriberQueue = reply.Queue;
 
     Log.Information("Assinatura confirmada. Fila: {Queue}", subscriberQueue);
+
+    // Consumidor dos tweets: ack manual, só depois de mostrar o tweet,
+    // para o broker reentregar se o programa cair antes de terminar
+    var tweetConsumer = new AsyncEventingBasicConsumer(channel);
+    tweetConsumer.ReceivedAsync += async (sender, ea) =>
+    {
+        Tweet? tweet;
+
+        try
+        {
+            tweet = JsonSerializer.Deserialize<Tweet>(ea.Body.Span);
+        }
+        catch (JsonException ex)
+        {
+            Log.Warning(ex, "Tweet inválido descartado: {Body}", Encoding.UTF8.GetString(ea.Body.Span));
+            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
+            return;
+        }
+
+        if (tweet is null)
+        {
+            Log.Warning("Mensagem vazia descartada em {Queue}", subscriberQueue);
+            await channel.BasicNackAsync(deliveryTag: ea.DeliveryTag, multiple: false, requeue: false);
+            return;
+        }
+
+        Console.WriteLine($"[{tweet.Topic ?? "?"}] @{tweet.Author ?? "desconhecido"}: {tweet.Text ?? "(sem texto)"}");
+
+        await channel.BasicAckAsync(deliveryTag: ea.DeliveryTag, multiple: false);
+    };
+
+    // Limita a quantidade de tweets entregues e ainda sem ack,
+    // para o broker não empurrar a fila inteira para a memória do cliente de uma vez
+    const ushort Prefetch = 10;
+    await channel.BasicQosAsync(prefetchSize: 0, prefetchCount: Prefetch, global: false);
+
+    // A consumer tag identifica este consumidor no broker; é usada para cancelá-lo no fim
+    string consumerTag = await channel.BasicConsumeAsync(
+        queue: subscriberQueue,
+        autoAck: false,
+        consumer: tweetConsumer
+    );
+
+    Log.Information("Aguardando tweets em {Queue}...", subscriberQueue);
+
+    var shutdown = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    Console.CancelKeyPress += (sender, e) =>
+    {
+        e.Cancel = true; // impede que o processo seja morto na hora; o encerramento é feito abaixo
+        shutdown.TrySetResult();
+    };
+
+    Console.WriteLine("Pressione Ctrl+C para sair.");
+    await shutdown.Task;
+
+    // Para de receber tweets antes de fechar; os não entregues continuam guardados na fila
+    await channel.BasicCancelAsync(consumerTag);
+    Log.Information("Encerrando...");
 
     return 0;
 }
@@ -187,4 +245,13 @@ record SubscriptionReply(
     [property: JsonPropertyName("subscriber")] string? Subscriber,
     [property: JsonPropertyName("queue")] string? Queue,
     [property: JsonPropertyName("topics")] string[]? Topics
+);
+
+record Tweet(
+    [property: JsonPropertyName("id")] string? Id,
+    [property: JsonPropertyName("text")] string? Text,
+    [property: JsonPropertyName("author")] string? Author,
+    [property: JsonPropertyName("created_at")] string? CreatedAt,
+    [property: JsonPropertyName("lang")] string? Lang,
+    [property: JsonPropertyName("topic")] string? Topic
 );
