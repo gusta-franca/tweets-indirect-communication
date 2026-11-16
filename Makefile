@@ -16,7 +16,7 @@ LOG_FILE    ?= $(CURDIR)/logs/message-service.log
 LOG_FILE    := $(abspath $(LOG_FILE))
 
 # Java
-JAVA_DIR := classificador
+JAVA_DIR := classifier
 OUT_DIR  := out
 
 all: up
@@ -51,7 +51,7 @@ build-java:
 	mkdir -p $(OUT_DIR)
 	CP=$$(mvn -q -f $(JAVA_DIR)/pom.xml dependency:build-classpath -Dmdep.outputFile=/dev/stdout) && \
 	javac -d $(OUT_DIR) -cp "$$CP" $$(find $(JAVA_DIR)/src -name '*.java')
-	
+
 # Roda o serviço de mensagens localmente, RabbitMQ fica no docker
 run-mservice:
 	$(COMPOSE) up -d rabbitmq
