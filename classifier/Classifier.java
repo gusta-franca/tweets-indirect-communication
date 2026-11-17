@@ -19,7 +19,7 @@ public class Classifier {
     private static final String TOPICS = "tweets.topics";
 
     public static void main(String[] args) throws Exception {
-        String url = System.getenv("AMPQ_URL");
+        String url = System.getenv("AMQP_URL");
         if (url == null || url.isEmpty()) {
             url = "amqp://tweets:tweets@localhost:5672/%2F";
         }

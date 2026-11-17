@@ -25,9 +25,10 @@ public class TopicMatcher{
             int score = 0;
 
             for (int j = 0; j < KEYWORDS[i].length; j++) {
+                // normalize() já devolve a palavra com um espaço em cada ponta (" gol "),
+                // garantindo que "gol" não case com "golpe".
                 String word = normalize(KEYWORDS[i][j]);
-                // Garantindo que "gol" não case com "golpe".
-                if (normalizedText.contains(" " + word + " ")) {
+                if (normalizedText.contains(word)) {
                     score = score + 1;
                 }
             }
