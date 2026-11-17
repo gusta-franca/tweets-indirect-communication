@@ -28,7 +28,7 @@ Os módulos podem ser escritos em qualquer linguagem: todos falam apenas **AMQP 
 Na raiz do repositório, execute:
 
 ```bash
-make up
+make all
 ```
 
 | Comando              | Descrição                                                        |

@@ -1,4 +1,4 @@
-.PHONY: all up down clean logs ps build-go vet test run-mservice
+.PHONY: all up down clean logs ps build-go build-java run-classifier run run-mservice
 
 # Carrega as variáveis do .env (se existir); formato simples CHAVE=valor
 -include .env
@@ -15,7 +15,12 @@ AMQP_URL    ?= amqp://tweets:tweets@localhost:5672/
 LOG_FILE    ?= $(CURDIR)/logs/message-service.log
 LOG_FILE    := $(abspath $(LOG_FILE))
 
-all: up
+# Java
+JAVA_DIR := classifier
+OUT_DIR  := out
+
+all: build-go build-java up
+	mvn -q compile exec:java
 
 # Sobe o RabbitMQ e o serviço de mensagens (compila a imagem do serviço se preciso)
 up:
@@ -41,6 +46,13 @@ ps:
 build-go:
 	mkdir -p $(BIN_DIR)
 	cd $(SERVICE_DIR) && CGO_ENABLED=0 go build -o ../$(BIN) ./service
+
+# Java 
+build-java:
+	mvn -q compile
+
+run-classifier:
+	mvn -q compile exec:java
 
 # Roda o serviço de mensagens localmente, RabbitMQ fica no docker
 run-mservice:
