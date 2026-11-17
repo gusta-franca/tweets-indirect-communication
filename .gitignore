@@ -26,10 +26,7 @@ go/internal/pb
 logs/
 storage/
 users/
-java/lib/
-java/build/
-javacode/
-java/generated
+target/
 tools/
 
 # Logs

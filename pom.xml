@@ -33,13 +33,24 @@
   </dependencies>
 
   <build>
+    <sourceDirectory>${project.basedir}</sourceDirectory>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <includes>
+            <include>classifier/**/*.java</include>
+          </includes>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
-          <mainClass>classifier.ClassifierApp</mainClass>
+          <mainClass>classifier.Classifier</mainClass>
         </configuration>
       </plugin>
     </plugins>

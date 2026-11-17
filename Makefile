@@ -48,9 +48,10 @@ build-go:
 
 # Java 
 build-java:
-	mkdir -p $(OUT_DIR)
-	CP=$$(mvn -q -f $(JAVA_DIR)/pom.xml dependency:build-classpath -Dmdep.outputFile=/dev/stdout) && \
-	javac -d $(OUT_DIR) -cp "$$CP" $$(find $(JAVA_DIR)/src -name '*.java')
+	mvn -q compile
+
+run-classifier:
+	mvn -q compile exec:java
 
 # Roda o serviço de mensagens localmente, RabbitMQ fica no docker
 run-mservice:
