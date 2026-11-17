@@ -26,7 +26,7 @@ go/internal/pb
 logs/
 storage/
 users/
-target/
+out/
 tools/
 
 # Logs

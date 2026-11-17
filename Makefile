@@ -1,4 +1,4 @@
-.PHONY: all up down clean logs ps build-go build-java vet test run-mservice
+.PHONY: all up down clean logs ps build-go build-java run-classifier run run-mservice
 
 # Carrega as variáveis do .env (se existir); formato simples CHAVE=valor
 -include .env
@@ -19,7 +19,8 @@ LOG_FILE    := $(abspath $(LOG_FILE))
 JAVA_DIR := classifier
 OUT_DIR  := out
 
-all: up
+all: build-go build-java up
+	mvn -q compile exec:java
 
 # Sobe o RabbitMQ e o serviço de mensagens (compila a imagem do serviço se preciso)
 up:

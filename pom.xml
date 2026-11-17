@@ -33,6 +33,7 @@
   </dependencies>
 
   <build>
+    <directory>out</directory>
     <sourceDirectory>${project.basedir}</sourceDirectory>
     <plugins>
       <plugin>
