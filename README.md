@@ -14,36 +14,62 @@ Classificador(es) -> tweets.topics -> sub.<assinante> ->
 Assinante
 ```
 
-| Módulo                | Função                                                                                   |
-|-----------------------|------------------------------------------------------------------------------------------|
-| Coletor               | Lê os tweets (arquivo JSON) e os envia para a fila de entrada                            |
-| Classificador         | Consome a fila de entrada, identifica o tópico e publica o tweet nele |
-| Assinante             | Assina um ou mais tópicos e recebe os tweets deles                                       |
-| Serviço de mensagens | Prepara o RabbitMQ e processa as assinaturas |
+| Módulo               | Pasta              | Linguagem | Função                                                                 |
+|----------------------|--------------------|-----------|------------------------------------------------------------------------|
+| Coletor              | `collector/`       | C#        | Lê os tweets (arquivo JSON) e os envia para a fila de entrada          |
+| Classificador        | `classifier/`      | Java      | Consome a fila de entrada, identifica o tópico e publica o tweet nele  |
+| Assinante            | `subscriber/`      | C#        | Assina um ou mais tópicos e recebe os tweets deles                     |
+| Serviço de mensagens | `message-service/` | Go        | Prepara o RabbitMQ e processa as assinaturas                           |
 
 Os módulos podem ser escritos em qualquer linguagem: todos falam apenas **AMQP 0-9-1** com o RabbitMQ e não se comunicam diretamente.
 
+## Requisitos
+
+- Docker com Docker Compose (RabbitMQ e serviço de mensagens)
+- Go (apenas para `make build-go` e `make run-mservice`)
+- Java 17+ e Maven (classificador)
+- .NET 10 (coletor e assinante)
+
 ## Como executar
 
-Na raiz do repositório, execute:
+Todos os comandos são executados na raiz do repositório.
 
-```bash
-make all
-```
-
-| Comando              | Descrição                                                        |
-|----------------------|------------------------------------------------------------------|
-| `make up`            | Sobe o RabbitMQ e o serviço de mensagens                         |
-| `make down`          | Para os containers, mantendo os dados                            |
-| `make clean`         | Para os containers e remove o volume com os dados do broker      |
-| `make logs`          | Acompanha o log do serviço (`logs/message-service.log`)          |
-| `make run-mservice`  | Roda o serviço localmente, RabbitMQ fica no docker               |
+| Comando                                                  | Descrição                                                              |
+|----------------------------------------------------------|------------------------------------------------------------------------|
+| `make all`                                               | Compila todos os módulos, sobe o RabbitMQ e o serviço e roda o classificador |
+| `make up`                                                | Sobe o RabbitMQ e o serviço de mensagens                               |
+| `make run-subscriber NAME=alice SUB_TOPICS="futebol voleibol"` | Roda um assinante (sem `NAME`/`SUB_TOPICS`, o programa pergunta) |
+| `make run-classifier`                                    | Roda um classificador                                                  |
+| `make run-collector`                                     | Publica os tweets de `collector/tweets.json` (outro arquivo: `FILE=outro.json`, relativo a `collector/`) |
+| `make down`                                              | Para os containers, mantendo os dados                                  |
+| `make clean`                                             | Para os containers e remove o volume com os dados do broker            |
+| `make logs`                                              | Acompanha o log do serviço (`logs/message-service.log`)                |
+| `make ps`                                                | Mostra o estado dos containers                                         |
+| `make run-mservice`                                      | Roda o serviço localmente, RabbitMQ fica no docker                     |
+| `make build-go` / `build-java` / `build-csharp`          | Compila só o módulo indicado                                           |
 
 O RabbitMQ fica disponível em `amqp://tweets:tweets@localhost:5672/`.
 
-**Ordem de inicialização:** serviço de mensagens -> assinantes -> classificadores -> coletor. 
+**Ordem de inicialização:** serviço de mensagens -> assinantes -> classificadores -> coletor.
 
 Os módulos esperam que as exchanges e filas já existam, e um assinante só recebe os tweets publicados depois da sua assinatura.
+
+### Testando o sistema completo
+
+Cada comando em um terminal, nesta ordem:
+
+```bash
+make up                                                     # 1. RabbitMQ + serviço de mensagens
+make run-subscriber NAME=alice SUB_TOPICS=futebol           # 2. assinante de futebol
+make run-subscriber NAME=bob SUB_TOPICS="voleibol futebol"  # 3. outro assinante (opcional)
+make run-classifier                                         # 4. classificador (pode haver vários)
+make run-collector                                          # 5. coletor
+```
+
+O coletor publica um tweet por segundo. Cada assinante deve exibir apenas os tweets dos tópicos que assinou, e o classificador registra os tweets descartados (sem tópico ou sem texto).
+
+- **Assinante:** os tópicos podem ser separados por espaço ou vírgula. `Ctrl+C` encerra; os tweets publicados enquanto ele está fora continuam guardados na fila `sub.<nome>`.
+- **Coletor:** publica cada tweet em `tweets.ingest` com confirmação do broker (*publisher confirms*) e termina ao chegar ao fim do arquivo.
 
 ## Configuração
 
