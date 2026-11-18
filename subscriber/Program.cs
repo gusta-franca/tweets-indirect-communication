@@ -202,6 +202,7 @@ finally
 }
 
 
+// Pergunta até receber uma resposta não vazia; retorna null se a entrada acabar (Ctrl+D)
 static string? AskQuestion(string question)
 {
     while (true)
@@ -222,6 +223,7 @@ static string? AskQuestion(string question)
     }
 }
 
+// Separa os tópicos digitados por vírgula ou espaço, ignorando vazios
 static string[] ParseTopics(string text)
 {
     if (string.IsNullOrWhiteSpace(text))
@@ -233,12 +235,14 @@ static string[] ParseTopics(string text)
         StringSplitOptions.TrimEntries);
 }
 
+// Pedido de assinatura enviado para tweets.control
 record SubscriptionRequest(
     [property: JsonPropertyName("action")] string Action,
     [property: JsonPropertyName("subscriber")] string Subscriber,
     [property: JsonPropertyName("topics")] string[] Topics
 );
 
+// Resposta do serviço de mensagens ao pedido de assinatura
 record SubscriptionReply(
     [property: JsonPropertyName("ok")] bool Ok,
     [property: JsonPropertyName("error")] string? Error,
@@ -247,6 +251,7 @@ record SubscriptionReply(
     [property: JsonPropertyName("topics")] string[]? Topics
 );
 
+// Tweet recebido na fila do assinante (já com o tópico)
 record Tweet(
     [property: JsonPropertyName("id")] string? Id,
     [property: JsonPropertyName("text")] string? Text,
