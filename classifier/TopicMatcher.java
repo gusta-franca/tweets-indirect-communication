@@ -1,3 +1,9 @@
+/*
+   Data última atualização: 17/11/2026
+   Estudante: Maria Eduarda Bambini
+   Lógica de classificação de tweets por palavras-chave.
+*/
+
 package classifier;
 
 import java.text.Normalizer;
@@ -24,9 +30,8 @@ public class TopicMatcher{
         for (int i = 0; i < TOPICS.length; i++) {
             int score = 0;
 
+            /* normalize() devolve a palavra com um espaço em cada ponta (" gol "), garantindo que "gol" não case com "golpe". */
             for (int j = 0; j < KEYWORDS[i].length; j++) {
-                // normalize() já devolve a palavra com um espaço em cada ponta (" gol "),
-                // garantindo que "gol" não case com "golpe".
                 String word = normalize(KEYWORDS[i][j]);
                 if (normalizedText.contains(word)) {
                     score = score + 1;

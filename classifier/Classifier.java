@@ -1,4 +1,13 @@
+/*
+   Data última atualização: 17/11/2026
+   Estudante: Maria Eduarda Bambini
+   Consome a fila de entrada e publica cada tweet no tópico identificado.
+*/
+
 package classifier;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -9,9 +18,6 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.MessageProperties;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 /* Consome tweets de "tweets.raw, identifica o tópico e publica em "tweets.topics" usando o tópico como routing key. */
 public class Classifier {
